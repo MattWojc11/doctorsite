@@ -2,7 +2,6 @@ import Navigation from '@/components/layout/Navigation'
 import Image from 'next/image'
 import Button from '@/components/shared/Button'
 import Footer from '@/components/layout/Footer'
-import { Award, GraduationCap, Stethoscope, Clock, Users, Heart, Star, CheckCircle, Calendar } from 'lucide-react'
 
 // Dane o kamieniach milowych
 const timeline = [
