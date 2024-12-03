@@ -47,6 +47,7 @@ const services = [
 
 export default function BookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
   const today = new Date().toISOString().split('T')[0]
   
   const [bookingData, setBookingData] = useState<BookingData>({
@@ -68,25 +69,121 @@ export default function BookingForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!bookingData.service || !bookingData.date || !bookingData.time || 
+        !bookingData.name || !bookingData.phone || !bookingData.email) {
+      alert('Please fill in all required fields')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
       await new Promise(resolve => setTimeout(resolve, 1500))
-      alert('Appointment scheduled successfully!')
-      setBookingData({
-        service: '',
-        date: '',
-        time: '',
-        name: '',
-        phone: '',
-        email: '',
-        notes: ''
-      })
+      
+      const confirmationData = {
+        ...bookingData,
+        id: Date.now(),
+        status: 'confirmed',
+        createdAt: new Date().toISOString()
+      }
+      
+      console.log('Confirmation Data:', confirmationData)
+
+      const bookings = JSON.parse(localStorage.getItem('bookings') || '[]')
+      bookings.push(confirmationData)
+      localStorage.setItem('bookings', JSON.stringify(bookings))
+
+      setBookingData(confirmationData)
+      setShowConfirmation(true)
     } catch {
       alert('Failed to schedule appointment. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (showConfirmation) {
+    console.log('Showing confirmation with data:', bookingData)
+    return (
+      <div className="bg-white rounded-2xl p-8 shadow-xl text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Appointment Confirmed!</h2>
+        <p className="text-gray-600 mb-8">
+          Thank you for booking your appointment. We have sent a confirmation email with all the details.
+        </p>
+        <div className="bg-gray-50 rounded-xl p-6 mb-8">
+          <div className="grid grid-cols-2 gap-4 text-left">
+            <div>
+              <div className="text-sm text-gray-500">Service</div>
+              <div className="font-semibold">{services.find(s => s.value === bookingData.service)?.label}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Price</div>
+              <div className="font-semibold">{services.find(s => s.value === bookingData.service)?.price}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Date</div>
+              <div className="font-semibold">
+                {bookingData.date ? new Date(bookingData.date).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                }) : ''}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Time</div>
+              <div className="font-semibold">
+                {bookingData.time ? new Date(`2000-01-01T${bookingData.time}`).toLocaleTimeString('en-US', {
+                  hour: 'numeric',
+                  minute: 'numeric',
+                  hour12: true
+                }) : ''}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Name</div>
+              <div className="font-semibold">{bookingData.name}</div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500">Phone</div>
+              <div className="font-semibold">{bookingData.phone}</div>
+            </div>
+            <div className="col-span-2">
+              <div className="text-sm text-gray-500">Email</div>
+              <div className="font-semibold">{bookingData.email}</div>
+            </div>
+            {bookingData.notes && (
+              <div className="col-span-2">
+                <div className="text-sm text-gray-500">Additional Notes</div>
+                <div className="font-semibold">{bookingData.notes}</div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-4 justify-center">
+          <Button 
+            onClick={() => setShowConfirmation(false)}
+            className="bg-[#0B6B5D] text-white"
+          >
+            Book Another Appointment
+          </Button>
+          <Button 
+            onClick={() => window.print()}
+            variant="secondary"
+            className="border-2 border-[#0B6B5D]"
+          >
+            Print Confirmation
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
